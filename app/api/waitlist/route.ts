@@ -47,11 +47,11 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Waitlist API Error:', error);
 
     // Handle duplicate key error (in case of race condition)
-    if (error.code === 11000) {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: number }).code === 11000) {
       return NextResponse.json(
         { success: false, message: 'This email is already on the waitlist' },
         { status: 409 }

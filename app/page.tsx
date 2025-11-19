@@ -8,12 +8,10 @@ import {
   CheckCircle, 
   ArrowRight, 
   Zap, 
-  Terminal,
-  MessageSquare,
-  HelpCircle,
   Menu,
   X
 } from 'lucide-react';
+import Image from 'next/image';
 
 /**
  * CleverMock - Virtual Mock Interview Platform
@@ -236,11 +234,11 @@ export default function App(): React.ReactElement {
             </form>
           </div>
           
-          {status === 'success' && (
-            <p className="mt-4 text-green-400 text-sm font-medium animate-fade-in">
-              Welcome aboard! We'll invite you as soon as spots open up.
-            </p>
-          )}
+            {status === 'success' && (
+              <p className="mt-4 text-green-400 text-sm font-medium animate-fade-in">
+                Welcome aboard! We&apos;ll invite you as soon as spots open up.
+              </p>
+            )}
           
           {/* <div className="mt-12 flex items-center justify-center gap-8 text-slate-500 grayscale opacity-60">
               Mock Logos 
@@ -316,7 +314,7 @@ export default function App(): React.ReactElement {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Frequently Asked Questions</h2>
-            <p className="text-slate-400">Got questions? We've got answers.</p>
+            <p className="text-slate-400">Got questions? We&apos;ve got answers.</p>
           </div>
           <div className="space-y-2">
             <FaqItem 
@@ -364,7 +362,7 @@ export default function App(): React.ReactElement {
             <div className="flex -space-x-3">
               {[1,2,3,4].map(i => (
                 <div key={i} className="w-10 h-10 rounded-full border-2 border-purple-900 bg-slate-700 flex items-center justify-center text-xs overflow-hidden hover:scale-110 transition-transform z-0 hover:z-10">
-                   <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i*123}`} alt="User" />
+                   <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i*123}`} alt="User" width={40} height={40} />
                 </div>
               ))}
             </div>
