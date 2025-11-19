@@ -141,6 +141,7 @@ export default function App(): React.ReactElement {
           <button 
             className="md:hidden p-2 text-slate-400 hover:text-white transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle mobile menu"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -367,7 +368,7 @@ export default function App(): React.ReactElement {
               ))}
             </div>
             <div className="text-left">
-              <div className="text-white font-bold text-sm">500+ Engineers</div>
+              <div className="text-white font-bold text-sm">50+ Engineers</div>
               <div className="text-slate-400 text-xs">Joined this week</div>
             </div>
           </div>
@@ -383,14 +384,14 @@ export default function App(): React.ReactElement {
             </span>
           </div>
           
-          <div className="flex gap-8 text-sm text-slate-400">
+          {/* <div className="flex gap-8 text-sm text-slate-400">
             <a href="#" className="hover:text-white transition-colors">Privacy</a>
             <a href="#" className="hover:text-white transition-colors">Terms</a>
             <a href="#" className="hover:text-white transition-colors">Twitter</a>
             <a href="#" className="hover:text-white transition-colors">GitHub</a>
-          </div>
+          </div> */}
 
-          <p className="text-slate-500 text-sm">&copy; 2024 CleverMock. All rights reserved.</p>
+          <p className="text-slate-500 text-sm">&copy; 2025 CleverMock. All rights reserved.</p>
         </div>
       </footer>
     </div>
