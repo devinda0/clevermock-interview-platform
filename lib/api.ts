@@ -1,0 +1,89 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+// API Response Types
+export interface PrepareStartResponse {
+  conversation_id: string;
+  status: string;
+  interview_details: string;
+}
+
+export interface RefineResponse {
+  interview_details: string;
+}
+
+export interface AcceptResponse {
+  status: string;
+}
+
+// API Error type
+export class ApiError extends Error {
+  constructor(public statusCode: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+/**
+ * Start preparation - upload CV and initial details
+ */
+export async function startPreparation(
+  file: File,
+  position: string,
+  instruction: string
+): Promise<PrepareStartResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('position', position);
+  formData.append('instruction', instruction);
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/prepare/start`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new ApiError(response.status, errorData.detail || 'Failed to start preparation');
+  }
+
+  return response.json();
+}
+
+/**
+ * Refine interview details with user feedback
+ */
+export async function refineDetails(
+  conversationId: string,
+  message: string
+): Promise<RefineResponse> {
+  const formData = new FormData();
+  formData.append('message', message);
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/prepare/${conversationId}/refine`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new ApiError(response.status, errorData.detail || 'Failed to refine details');
+  }
+
+  return response.json();
+}
+
+/**
+ * Accept the interview details and proceed to interview
+ */
+export async function acceptDetails(conversationId: string): Promise<AcceptResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/prepare/${conversationId}/accept`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new ApiError(response.status, errorData.detail || 'Failed to accept details');
+  }
+
+  return response.json();
+}

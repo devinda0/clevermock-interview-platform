@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Upload, FileText, CheckCircle, ArrowRight, Loader2 } from "lucide-react"
+import { Upload, FileText, CheckCircle, ArrowRight, Loader2, AlertCircle } from "lucide-react"
+import { startPreparation, ApiError } from "@/lib/api"
 
 export function VideoInterviewPrepForm() {
   const router = useRouter()
@@ -11,31 +12,52 @@ export function VideoInterviewPrepForm() {
     position: "",
     instruction: "",
   })
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
+    setErrorMessage(null)
     
-    // Simulate API delay for effect
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Save to sessionStorage to pass data to Chat page
-    sessionStorage.setItem('interviewContext', JSON.stringify({
+    if (!formData.cv) {
+      setStatus('error')
+      setErrorMessage('Please upload a CV file')
+      return
+    }
+
+    try {
+      const response = await startPreparation(
+        formData.cv,
+        formData.position,
+        formData.instruction
+      )
+      
+      // Save response to sessionStorage for chat page
+      sessionStorage.setItem('interviewContext', JSON.stringify({
+        conversationId: response.conversation_id,
         position: formData.position,
         instruction: formData.instruction,
-        // For security/size reasons, we don't store the full file in storage effectively
-        // We'll just store the name for the UI context
-        cvName: formData.cv?.name || "No CV uploaded"
-    }))
-    
-    console.log("Form data:", formData)
-    setStatus('success')
-    
-    // Slight delay before navigation
-    setTimeout(() => {
+        cvName: formData.cv.name,
+        interviewDetails: response.interview_details,
+        status: response.status
+      }))
+      
+      setStatus('success')
+      
+      // Navigate to chat page
+      setTimeout(() => {
         router.push("/chat")
-    }, 500)
+      }, 500)
+    } catch (error) {
+      setStatus('error')
+      if (error instanceof ApiError) {
+        setErrorMessage(error.message)
+      } else {
+        setErrorMessage('An unexpected error occurred. Please try again.')
+      }
+      console.error('Preparation error:', error)
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,6 +154,14 @@ export function VideoInterviewPrepForm() {
           </div>
         </div>
 
+        {/* Error Display */}
+        {status === 'error' && errorMessage && (
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <p className="text-sm font-medium">{errorMessage}</p>
+          </div>
+        )}
+
         {/* Submit Button */}
         <button
           type="submit"
@@ -139,6 +169,8 @@ export function VideoInterviewPrepForm() {
           className={`w-full py-4 rounded-xl font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group/btn shadow-lg
             ${status === 'success' 
               ? 'bg-green-500 hover:bg-green-600 shadow-green-500/25' 
+              : status === 'error'
+              ? 'bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-purple-500/25'
               : 'bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-purple-500/25'
             }
           `}

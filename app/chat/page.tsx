@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { MessageBubble } from "@/components/chat/message-bubble"
 import { ChatInput } from "@/components/chat/chat-input"
+import { refineDetails, acceptDetails, ApiError } from "@/lib/api"
 import { 
   Mic, 
   CheckCircle, 
@@ -11,7 +12,8 @@ import {
   ArrowRight, 
   Sparkles,
   Zap,
-  MessageSquare 
+  MessageSquare,
+  AlertCircle
 } from "lucide-react"
 
 interface Message {
@@ -22,9 +24,12 @@ interface Message {
 }
 
 interface InterviewContext {
+  conversationId: string
   position: string
   instruction: string
   cvName: string
+  interviewDetails: string
+  status: string
 }
 
 export default function ChatPage() {
@@ -32,7 +37,9 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [interviewContext, setInterviewContext] = useState<InterviewContext | null>(null)
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const [isAccepted, setIsAccepted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -47,84 +54,53 @@ export default function ChatPage() {
     // Load initial context from sessionStorage
     const storedContext = sessionStorage.getItem('interviewContext')
     
-    const timer = setTimeout(() => {
-      let initialContent = `# Welcome to Your Interview Session 👋
+    if (storedContext) {
+      try {
+        const context = JSON.parse(storedContext) as InterviewContext
+        setInterviewContext(context)
+        setConversationId(context.conversationId)
+        
+        // Use interview details from backend
+        const initialContent = context.interviewDetails || `# Interview Preparation Complete! 🎯
 
-I couldn't find your preparation details. Let's start fresh!
+I've analyzed your profile and prepared a customized interview session for **${context.position}**.
 
-Please tell me:
-- **What role** are you applying for?
-- **Any specific areas** you'd like to focus on?
-
-I'll create a personalized interview plan for you.`
-      
-      if (storedContext) {
-        try {
-          const context = JSON.parse(storedContext) as InterviewContext
-          setInterviewContext(context)
-          
-          initialContent = `# Interview Preparation Complete! 🎯
-
-I've analyzed your profile and prepared a customized interview session.
-
----
-
-## 📋 Session Overview
-
-| Detail | Value |
-|--------|-------|
-| **Target Role** | ${context.position} |
-| **Resume** | ${context.cvName} |
-| **Focus Areas** | ${context.instruction} |
-
----
-
-## 🎤 Interview Structure
-
-I'll conduct a **comprehensive interview** covering:
-
-1. **Introduction & Background** (5 min)
-   - Walk through your experience
-   - Discuss your career goals
-
-2. **Technical Deep Dive** (20 min)
-   - Role-specific questions
-   - Problem-solving scenarios
-
-3. **Behavioral Questions** (15 min)
-   - STAR method responses
-   - Leadership & teamwork
-
-4. **Q&A Session** (10 min)
-   - Your questions for the interviewer
-
----
-
-> 💡 **Tip**: Treat this like a real interview. Speak clearly and take your time to structure your answers.
-
----
-
-**Ready to begin?** Click **Accept & Start Interview** below, or type any refinements you'd like to make to this plan.`
-        } catch (e) {
-          console.error("Failed to parse context", e)
-        }
-      }
-
-      setMessages([
-        {
+Please wait while the AI generates your interview plan...`
+        
+        setMessages([{
           id: '1',
           role: 'ai',
           content: initialContent,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ])
-      setIsLoading(false)
-    }, 1500)
+        }])
+        setIsLoading(false)
+      } catch (e) {
+        console.error("Failed to parse context", e)
+        setError("Failed to load interview context")
+        setIsLoading(false)
+      }
+    } else {
+      // No context found - redirect to prepare page
+      setMessages([{
+        id: '1',
+        role: 'ai',
+        content: `# Welcome to Your Interview Session 👋
 
-    return () => clearTimeout(timer)
+I couldn't find your preparation details. Let's start fresh!
+
+Please go back to the [preparation page](/prepare) to set up your interview.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }])
+      setIsLoading(false)
+    }
   }, [])
 
   const handleSendMessage = async (text: string) => {
+    if (!conversationId) {
+      setError("No conversation found. Please restart from the preparation page.")
+      return
+    }
+    
     // Add User Message
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -134,34 +110,44 @@ I'll conduct a **comprehensive interview** covering:
     }
     setMessages(prev => [...prev, userMsg])
     setIsLoading(true)
+    setError(null)
 
-    // Simulate AI Response with refinement
-    setTimeout(() => {
+    try {
+      const response = await refineDetails(conversationId, text)
+      
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'ai',
-        content: `## ✅ Plan Updated
-
-I've noted your feedback: *"${text}"*
-
-I'll incorporate this into our interview session. Here's what I'll adjust:
-
-- **Modified focus areas** based on your input
-- **Tailored questions** to address your specific needs
-- **Adjusted difficulty level** as requested
-
----
-
-The interview plan has been refined. Would you like to make any more changes, or are you ready to **Accept & Start Interview**?`,
+        content: response.interview_details,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
       setMessages(prev => [...prev, aiMsg])
+    } catch (err) {
+      const errorMessage = err instanceof ApiError ? err.message : 'Failed to refine interview plan'
+      setError(errorMessage)
+      
+      // Add error message to chat
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'ai',
+        content: `⚠️ **Error**: ${errorMessage}\n\nPlease try again or restart from the [preparation page](/prepare).`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+      setMessages(prev => [...prev, errorMsg])
+    } finally {
       setIsLoading(false)
-    }, 2000)
+    }
   }
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
+    if (!conversationId) {
+      setError("No conversation found. Please restart from the preparation page.")
+      return
+    }
+    
     setIsAccepted(true)
+    setError(null)
+    
     // Add acceptance message
     const acceptMsg: Message = {
       id: Date.now().toString(),
@@ -177,10 +163,30 @@ Perfect! Your interview session is now being prepared.
     }
     setMessages(prev => [...prev, acceptMsg])
 
-    // Navigate to interview page after a brief delay
-    setTimeout(() => {
-      router.push("/interview")
-    }, 2000)
+    try {
+      await acceptDetails(conversationId)
+      
+      // Store conversation ID for interview page
+      sessionStorage.setItem('interviewConversationId', conversationId)
+      
+      // Navigate to interview page after a brief delay
+      setTimeout(() => {
+        router.push("/interview")
+      }, 2000)
+    } catch (err) {
+      setIsAccepted(false)
+      const errorMessage = err instanceof ApiError ? err.message : 'Failed to accept interview plan'
+      setError(errorMessage)
+      
+      // Add error message to chat
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'ai',
+        content: `⚠️ **Error**: ${errorMessage}\n\nPlease try again.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+      setMessages(prev => [...prev, errorMsg])
+    }
   }
 
   return (
