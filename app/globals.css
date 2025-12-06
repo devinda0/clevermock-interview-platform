@@ -48,6 +48,26 @@
   .text-gradient-pink-purple {
     @apply bg-linear-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent;
   }
+
+  /* Custom Component Utilities */
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10;
+  }
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-enter {
+    animation: slideUpFade 0.4s ease-out forwards;
 }
 
 /* Custom animations */
