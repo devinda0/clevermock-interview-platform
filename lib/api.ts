@@ -87,3 +87,41 @@ export async function acceptDetails(conversationId: string): Promise<AcceptRespo
 
   return response.json();
 }
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  full_name?: string;
+  is_active?: boolean;
+}
+
+export interface SignupResponse {
+  email: string;
+  full_name?: string;
+  id: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+/**
+ * Register a new user
+ */
+export async function signup(data: SignupRequest): Promise<SignupResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/signup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      ...data,
+      is_active: true
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new ApiError(response.status, errorData.detail || 'Failed to sign up');
+  }
+
+  return response.json();
+}
