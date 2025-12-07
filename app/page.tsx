@@ -9,8 +9,12 @@ import {
   ArrowRight, 
   Zap, 
   Menu,
-  X
+  X,
+  LogIn,
+  LogOut,
+  User
 } from 'lucide-react';
+import { useAuth } from "@/context/AuthContext";
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -78,6 +82,60 @@ const FaqItem: React.FC<{ question: string; answer: string }> = ({ question, ans
   );
 };
 
+const LoginButton = () => {
+    const { user, logout, isLoading } = useAuth();
+    
+    if (isLoading) return null;
+
+    if (user) {
+        return (
+            <div className="flex items-center gap-4">
+               <span className="text-sm text-slate-400 hidden lg:inline-block">Welcome back</span>
+               <button 
+                onClick={logout}
+                className="px-5 py-2 rounded-full bg-slate-800 text-slate-200 text-sm font-semibold hover:bg-slate-700 transition-colors flex items-center gap-2 border border-white/5"
+               >
+                 <LogOut className="w-4 h-4" />
+                 Sign Out
+               </button>
+            </div>
+        )
+    }
+
+    return (
+        <Link href="/login" className="px-6 py-2 rounded-full bg-linear-to-r from-blue-600 to-purple-600 text-white text-sm font-bold hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
+            Sign In
+            <LogIn className="w-4 h-4" />
+        </Link>
+    )
+}
+
+const MobileLoginButton = () => {
+   const { user, logout, isLoading } = useAuth();
+
+   if (isLoading) return null;
+
+    if (user) {
+         return (
+             <button 
+                onClick={logout}
+                className="flex items-center gap-2 text-slate-400 hover:text-white py-2 transition-colors text-left"
+               >
+                 <LogOut className="w-4 h-4" />
+                 Sign Out
+               </button>
+         )
+    }
+
+    return (
+         <Link href="/login" className="flex items-center gap-2 text-purple-400 hover:text-purple-300 py-2 transition-colors font-semibold">
+             <LogIn className="w-4 h-4" />
+             Sign In
+         </Link>
+    )
+
+}
+
 export default function App(): React.ReactElement {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -103,13 +161,12 @@ export default function App(): React.ReactElement {
             <a href="#features" className="hover:text-white transition-colors hover:scale-105 transform duration-200">Features</a>
             <a href="#how-it-works" className="hover:text-white transition-colors hover:scale-105 transform duration-200">How it Works</a>
             <a href="#faq" className="hover:text-white transition-colors hover:scale-105 transform duration-200">FAQ</a>
+            <LoginButton />
           </div>
 
-          {/* Mobile Menu Button */}
           <button 
-            className="md:hidden p-2 text-slate-400 hover:text-white transition-colors"
+            className="md:hidden text-slate-400 hover:text-white transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle mobile menu"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -139,6 +196,7 @@ export default function App(): React.ReactElement {
             >
               FAQ
             </a>
+             <MobileLoginButton />
           </div>
         )}
       </header>

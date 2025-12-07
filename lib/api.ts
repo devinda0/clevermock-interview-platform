@@ -36,8 +36,13 @@ export async function startPreparation(
   formData.append('position', position);
   formData.append('instruction', instruction);
 
+  const token = localStorage.getItem("access_token");
+
   const response = await fetch(`${API_BASE_URL}/api/v1/prepare/start`, {
     method: 'POST',
+    headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
     body: formData,
   });
 
@@ -59,8 +64,13 @@ export async function refineDetails(
   const formData = new FormData();
   formData.append('message', message);
 
+  const token = localStorage.getItem("access_token");
+
   const response = await fetch(`${API_BASE_URL}/api/v1/prepare/${conversationId}/refine`, {
     method: 'POST',
+    headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
     body: formData,
   });
 
@@ -76,8 +86,13 @@ export async function refineDetails(
  * Accept the interview details and proceed to interview
  */
 export async function acceptDetails(conversationId: string): Promise<AcceptResponse> {
+  const token = localStorage.getItem("access_token");
+
   const response = await fetch(`${API_BASE_URL}/api/v1/prepare/${conversationId}/accept`, {
     method: 'POST',
+    headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
   });
 
   if (!response.ok) {

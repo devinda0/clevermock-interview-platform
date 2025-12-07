@@ -1,9 +1,30 @@
 "use client"
 
 import { VideoInterviewPrepForm } from "@/components/video-interview-prep-form"
-import { Sparkles, Zap } from "lucide-react"
+import { Sparkles, Zap, Loader2 } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function PreparePage() {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login")
+    }
+  }, [isLoading, user, router])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!user) return null
   return (
     <div className="min-h-screen bg-[#0B0F19] relative overflow-hidden flex flex-col items-center justify-center p-6 sm:p-12 font-sans selection:bg-purple-500/30 selection:text-purple-200">
       
