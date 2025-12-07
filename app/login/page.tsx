@@ -30,6 +30,10 @@ export default function LoginPage() {
       localStorage.setItem('access_token', response.access_token)
       localStorage.setItem('refresh_token', response.refresh_token)
       
+      // Set cookie for middleware access (non-HttpOnly for client-side setting)
+      // Max age 1 day (86400 seconds)
+      document.cookie = `access_token=${response.access_token}; path=/; max-age=86400; SameSite=Strict`
+      
       setStatus('success')
       
       // Redirect to prepare page after a short delay

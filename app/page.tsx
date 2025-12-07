@@ -37,7 +37,7 @@ const FeatureCard: React.FC<{ icon: IconType; title: string; description: string
 );
 
 const StepCard: React.FC<{ number: string | number; title: string; description: string; isLast?: boolean }> = ({ number, title, description, isLast }) => (
-  <div className="relative pl-8 md:pl-0 group">
+  <div className="relative pl-8 md:pl-0 group h-full">
     {/* Connector Line */}
     {!isLast && (
       <div className="hidden md:block absolute top-6 left-1/2 w-[calc(100%+1.5rem)] h-0.5 bg-linear-to-r from-purple-500/50 to-blue-500/50 -translate-y-1/2 z-0" />
@@ -78,40 +78,7 @@ const FaqItem: React.FC<{ question: string; answer: string }> = ({ question, ans
 };
 
 export default function App(): React.ReactElement {
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState('idle'); // idle, loading, success, error
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!email) return;
-
-    setStatus('loading');
-
-    try {
-      const res = await fetch('/api/waitlist', { 
-        method: 'POST', 
-        body: JSON.stringify({ email }),
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setStatus('success');
-        setEmail('');
-      } else {
-        setStatus('error');
-        console.error(data.message);
-        // Optional: Show error message to user
-        alert(data.message || 'Something went wrong');
-      }
-    } catch (error) {
-      setStatus('error');
-      console.error('Error submitting form:', error);
-      alert('Something went wrong. Please try again.');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#0B0F19] text-slate-200 selection:bg-purple-500/30 selection:text-purple-200 font-sans overflow-x-hidden">
@@ -178,75 +145,29 @@ export default function App(): React.ReactElement {
       {/* Hero Section */}
       <section className="relative z-10 min-h-[90vh] flex flex-col justify-center pt-20 pb-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-semibold tracking-wide uppercase mb-8 animate-bounce shadow-[0_0_10px_rgba(168,85,247,0.2)]">
-            <Zap className="w-3 h-3" />
-            <span>AI-Powered Voice Interviews</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-6 animate-pulse-slow">
+            <Sparkles className="w-4 h-4" />
+            <span>Now Live & Available for Everyone</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-6 leading-tight drop-shadow-2xl">
-            Practice Real <br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-purple-400 to-pink-400 animate-pulse">
-              Voice-to-Voice
-            </span>
-            <br /> Interviews
+          <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-learning-gradient mb-6 tracking-tight leading-tight">
+            Master Your Next <br/>
+            <span className="text-white">Technical Interview</span>
           </h1>
           
           <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
             Experience the most realistic mock interviews with our advanced voice AI. Speak naturally, get interrupted, and receive instant feedback just like the real thing.
           </p>
 
-          {/* Waitlist Form */}
-          <div className="max-w-md mx-auto relative group">
-            <div className="absolute -inset-1 bg-linear-to-r from-blue-600 to-purple-600 rounded-xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-            <form onSubmit={handleSubmit} className="relative flex flex-col md:flex-row gap-2 bg-slate-900/90 backdrop-blur-xl p-2 rounded-xl border border-white/10 shadow-2xl">
-              <input 
-                type="email" 
-                placeholder="Enter your email address" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={status === 'loading' || status === 'success'}
-                className="flex-1 bg-transparent border-none outline-none text-white placeholder-slate-500 px-4 py-3 rounded-lg focus:ring-2 focus:ring-purple-500/50 transition-all"
-                required
-              />
-              <button 
-                type="submit" 
-                disabled={status === 'loading' || status === 'success'}
-                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2
-                  ${status === 'success' 
-                    ? 'bg-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)]' 
-                    : 'bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/50 hover:scale-105 active:scale-95'
-                  }
-                `}
-              >
-                {status === 'loading' ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : status === 'success' ? (
-                  <>
-                    <CheckCircle className="w-5 h-5" />
-                    <span>Joined!</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Join Waitlist</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link href="/login" className="px-8 py-4 rounded-full bg-linear-to-r from-blue-600 to-purple-600 text-white font-bold text-lg hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all hover:scale-105 active:scale-95 flex items-center gap-2 group">
+                Start Interviewing
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link href="#how-it-works" className="px-8 py-4 rounded-full bg-slate-800 text-white font-bold text-lg hover:bg-slate-700 transition-all hover:scale-105 active:scale-95">
+                See How It Works
+              </Link>
           </div>
-          
-            {status === 'success' && (
-              <p className="mt-4 text-green-400 text-sm font-medium animate-fade-in">
-                Welcome aboard! We&apos;ll invite you as soon as spots open up.
-              </p>
-            )}
-          
-          {/* <div className="mt-12 flex items-center justify-center gap-8 text-slate-500 grayscale opacity-60">
-              Mock Logos 
-            <div className="flex items-center gap-2"><div className="w-6 h-6 rounded bg-current"/> TechCorp</div>
-            <div className="flex items-center gap-2"><div className="w-6 h-6 rounded-full bg-current"/> InnoSys</div>
-            <div className="flex items-center gap-2"><div className="w-6 h-6 rotate-45 bg-current"/> DataFlow</div>
-          </div> */}
         </div>
       </section>
 
@@ -338,38 +259,33 @@ export default function App(): React.ReactElement {
         </div>
       </section>
 
-      {/* Social Proof / CTA */}
-      <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto rounded-3xl bg-linear-to-r from-blue-900/40 to-purple-900/40 border border-white/10 p-12 text-center relative overflow-hidden group hover:border-purple-500/30 transition-colors duration-500">
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 group-hover:opacity-10 transition-opacity duration-500"></div>
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-purple-500/20 rounded-full blur-[80px] group-hover:bg-purple-500/30 transition-colors duration-500"></div>
-          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500/20 rounded-full blur-[80px] group-hover:bg-blue-500/30 transition-colors duration-500"></div>
-          
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 relative z-10">
-            Ready to level up your career?
+      {/* CTA Section */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-linear-to-b from-transparent to-purple-900/20" />
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Ready to Ace Your Next Interview?
           </h2>
-          <p className="text-slate-300 mb-8 max-w-lg mx-auto relative z-10">
-            Join 2,000+ engineers waiting to get early access to CleverMock.
+          <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+            Join thousands of engineers who are mastering their interviews with CleverMock.
           </p>
           
-          <button 
-             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-             className="relative z-10 px-8 py-3 rounded-full bg-white text-purple-900 font-bold hover:bg-purple-50 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:scale-105 active:scale-95"
-          >
-            Get Early Access
-          </button>
+          <Link href="/signup" className="inline-flex items-center gap-2 px-10 py-5 rounded-full bg-white text-purple-900 font-bold hover:bg-purple-50 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:scale-105 active:scale-95 text-lg">
+            Get Started for Free
+            <ArrowRight className="w-5 h-5" />
+          </Link>
 
-          <div className="mt-8 flex items-center justify-center gap-4 relative z-10">
-            <div className="flex -space-x-3">
-              {[1,2,3,4].map(i => (
-                <div key={i} className="w-10 h-10 rounded-full border-2 border-purple-900 bg-slate-700 flex items-center justify-center text-xs overflow-hidden hover:scale-110 transition-transform z-0 hover:z-10">
-                   <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i*123}`} alt="User" width={40} height={40} />
+          <div className="mt-12 flex items-center justify-center gap-6 opacity-70">
+            <div className="flex -space-x-4">
+              {[1,2,3,4,5].map(i => (
+                <div key={i} className="w-12 h-12 rounded-full border-2 border-purple-900 bg-slate-800 flex items-center justify-center overflow-hidden">
+                   <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i*567}`} alt="User" width={48} height={48} />
                 </div>
               ))}
             </div>
             <div className="text-left">
-              <div className="text-white font-bold text-sm">50+ Engineers</div>
-              <div className="text-slate-400 text-xs">Joined this week</div>
+              <div className="text-white font-bold text-base">Joined by 50+ Engineers</div>
+              <div className="text-slate-400 text-sm">this week</div>
             </div>
           </div>
         </div>
