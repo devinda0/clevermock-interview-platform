@@ -165,6 +165,7 @@ Perfect! Your interview session is now being prepared.
 
     try {
       await acceptDetails(conversationId)
+      setIsAccepted(true)
       
       // Store conversation ID for interview page
       sessionStorage.setItem('interviewConversationId', conversationId)
