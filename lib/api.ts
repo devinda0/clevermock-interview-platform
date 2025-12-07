@@ -125,3 +125,34 @@ export async function signup(data: SignupRequest): Promise<SignupResponse> {
 
   return response.json();
 }
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+}
+
+/**
+ * Log in a user
+ */
+export async function login(data: LoginRequest): Promise<LoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new ApiError(response.status, errorData.detail || 'Failed to log in');
+  }
+
+  return response.json();
+}
