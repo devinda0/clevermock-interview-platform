@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
   LiveKitRoom,
@@ -13,6 +13,7 @@ import {
 import "@livekit/components-styles"
 import { Track } from "livekit-client"
 import { Mic, MicOff, PhoneOff, Loader2 } from "lucide-react"
+import { getLiveKitToken } from "@/lib/api"
 
 // Custom Video Conference component to customize layout if needed
 function VideoConference() {
@@ -81,20 +82,7 @@ export default function InterviewPage() {
         }
 
         // Fetch token
-        const tokenRes = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/livekit/token?room=${conversationId}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                }
-            }
-        )
-
-        if (!tokenRes.ok) {
-            throw new Error("Failed to fetch interview token")
-        }
-
-        const data = await tokenRes.json()
+        const data = await getLiveKitToken(conversationId)
         setToken(data.token)
         setServerUrl(data.serverUrl)
       } catch (err: any) {
@@ -108,8 +96,28 @@ export default function InterviewPage() {
     initInterview()
   }, [router])
 
-  const handleDisconnect = () => {
-    router.push("/dashboard") // Or wherever you want them to go after
+  // Track if component is mounted to prevent redirects from unmounted components
+  const isMounted = useRef(true)
+
+  useEffect(() => {
+    isMounted.current = true
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  const [isDisconnected, setIsDisconnected] = useState(false)
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleDisconnect = (...args: any[]) => {
+    console.log("Disconnected from interview room", args)
+    if (isMounted.current) {
+      console.log("Component is mounted. Setting disconnected state.")
+      setIsDisconnected(true)
+      // router.push("/chat") // Redirect to chat instead of 404
+    } else {
+        console.log("Component is unmounted, ignoring disconnect redirect")
+    }
   }
 
   if (isConnecting) {
@@ -139,6 +147,23 @@ export default function InterviewPage() {
     )
   }
 
+  if (isDisconnected) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-950 text-white">
+        <div className="text-center space-y-4 p-8 bg-slate-900 rounded-xl border border-slate-700">
+            <h3 className="text-xl font-semibold">Interview Ended</h3>
+            <p className="text-slate-400">The connection was closed.</p>
+            <button 
+                onClick={() => router.push("/chat")}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
+            >
+                Return to Chat
+            </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-white" data-lk-theme="default">
       <LiveKitRoom
@@ -147,6 +172,16 @@ export default function InterviewPage() {
         token={token}
         serverUrl={serverUrl}
         onDisconnected={handleDisconnect}
+        onError={(err) => {
+          console.error("LiveKit Error:", err);
+          setError(`Connection error: ${err.message}`);
+          setIsConnecting(false);
+        }}
+        onMediaDeviceFailure={(err: any) => {
+          console.error("Media Device Failure:", err);
+          setError(`Microphone error: ${err?.message || "Unknown media error"}. Please check your permissions.`);
+          setIsConnecting(false);
+        }}
         className="flex-1"
       >
         <VideoConference />

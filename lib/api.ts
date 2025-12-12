@@ -1,5 +1,120 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// Token refresh lock to prevent multiple simultaneous refresh attempts
+let isRefreshing = false;
+let refreshPromise: Promise<string | null> | null = null;
+
+/**
+ * Refresh the access token using the stored refresh token
+ */
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!response.ok) {
+      // Refresh token is invalid or expired, clear tokens
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      document.cookie = 'access_token=; path=/; max-age=0; SameSite=Strict';
+      return null;
+    }
+
+    const data = await response.json();
+    
+    // Store the new tokens
+    localStorage.setItem('access_token', data.access_token);
+    localStorage.setItem('refresh_token', data.refresh_token);
+    document.cookie = `access_token=${data.access_token}; path=/; max-age=86400; SameSite=Strict`;
+    
+    return data.access_token;
+  } catch (error) {
+    console.error('Failed to refresh token:', error);
+    return null;
+  }
+}
+
+/**
+ * Get a valid access token, refreshing if necessary
+ */
+async function getValidAccessToken(): Promise<string | null> {
+  const token = localStorage.getItem('access_token');
+  
+  // If no token, try to refresh
+  if (!token) {
+    if (isRefreshing && refreshPromise) {
+      return refreshPromise;
+    }
+    
+    isRefreshing = true;
+    refreshPromise = refreshAccessToken();
+    const newToken = await refreshPromise;
+    isRefreshing = false;
+    refreshPromise = null;
+    return newToken;
+  }
+  
+  return token;
+}
+
+/**
+ * Make an authenticated fetch request with automatic token refresh
+ */
+export async function authenticatedFetch(
+  url: string,
+  options: RequestInit = {},
+  retryOnAuthError = true
+): Promise<Response> {
+  const token = await getValidAccessToken();
+  
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> || {}),
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+  
+  // If we get a 401 or 403, try to refresh the token and retry once
+  if ((response.status === 401 || response.status === 403) && retryOnAuthError) {
+    // Prevent multiple simultaneous refresh attempts
+    if (!isRefreshing) {
+      isRefreshing = true;
+      refreshPromise = refreshAccessToken();
+    }
+    
+    const newToken = await refreshPromise;
+    isRefreshing = false;
+    refreshPromise = null;
+    
+    if (newToken) {
+      // Retry the request with the new token
+      headers['Authorization'] = `Bearer ${newToken}`;
+      return fetch(url, {
+        ...options,
+        headers,
+      });
+    }
+  }
+  
+  return response;
+}
+
 // API Response Types
 export interface PrepareStartResponse {
   conversation_id: string;
@@ -36,13 +151,8 @@ export async function startPreparation(
   formData.append('position', position);
   formData.append('instruction', instruction);
 
-  const token = localStorage.getItem("access_token");
-
-  const response = await fetch(`${API_BASE_URL}/api/v1/prepare/start`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/v1/prepare/start`, {
     method: 'POST',
-    headers: {
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    },
     body: formData,
   });
 
@@ -64,13 +174,8 @@ export async function refineDetails(
   const formData = new FormData();
   formData.append('message', message);
 
-  const token = localStorage.getItem("access_token");
-
-  const response = await fetch(`${API_BASE_URL}/api/v1/prepare/${conversationId}/refine`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/v1/prepare/${conversationId}/refine`, {
     method: 'POST',
-    headers: {
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    },
     body: formData,
   });
 
@@ -86,13 +191,8 @@ export async function refineDetails(
  * Accept the interview details and proceed to interview
  */
 export async function acceptDetails(conversationId: string): Promise<AcceptResponse> {
-  const token = localStorage.getItem("access_token");
-
-  const response = await fetch(`${API_BASE_URL}/api/v1/prepare/${conversationId}/accept`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/v1/prepare/${conversationId}/accept`, {
     method: 'POST',
-    headers: {
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    },
   });
 
   if (!response.ok) {
@@ -167,6 +267,30 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
     throw new ApiError(response.status, errorData.detail || 'Failed to log in');
+  }
+
+  return response.json();
+}
+
+export interface LiveKitTokenResponse {
+  token: string;
+  identity: string;
+  room: string;
+  serverUrl: string;
+}
+
+/**
+ * Get LiveKit token for interview room
+ */
+export async function getLiveKitToken(room: string): Promise<LiveKitTokenResponse> {
+  console.log(room);
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/livekit/token?room=${room}`
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new ApiError(response.status, errorData.detail || 'Failed to get interview token');
   }
 
   return response.json();
