@@ -7,23 +7,14 @@ import {
   RoomAudioRenderer,
   ControlBar,
   DisconnectButton,
-  useTracks,
-  TrackReferenceOrPlaceholder,
 } from "@livekit/components-react"
 import "@livekit/components-styles"
-import { Track } from "livekit-client"
-import { Mic, MicOff, PhoneOff, Loader2 } from "lucide-react"
+import { PhoneOff, Loader2 } from "lucide-react"
 import { getLiveKitToken } from "@/lib/api"
 
 // Custom Video Conference component to customize layout if needed
 function VideoConference() {
-  const tracks = useTracks(
-    [
-      { source: Track.Source.Camera, withPlaceholder: true },
-      { source: Track.Source.ScreenShare, withPlaceholder: false },
-    ],
-    { onlySubscribed: false },
-  )
+
 
   return (
     <div className="flex flex-col h-full">
@@ -85,9 +76,9 @@ export default function InterviewPage() {
         const data = await getLiveKitToken(conversationId)
         setToken(data.token)
         setServerUrl(data.serverUrl)
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error connecting to interview:", err)
-        setError(err.message || "Failed to initialize interview")
+        setError((err as Error).message || "Failed to initialize interview")
       } finally {
         setIsConnecting(false)
       }
@@ -108,8 +99,7 @@ export default function InterviewPage() {
 
   const [isDisconnected, setIsDisconnected] = useState(false)
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleDisconnect = (...args: any[]) => {
+  const handleDisconnect = (...args: unknown[]) => {
     console.log("Disconnected from interview room", args)
     if (isMounted.current) {
       console.log("Component is mounted. Setting disconnected state.")
@@ -177,9 +167,9 @@ export default function InterviewPage() {
           setError(`Connection error: ${err.message}`);
           setIsConnecting(false);
         }}
-        onMediaDeviceFailure={(err: any) => {
+        onMediaDeviceFailure={(err) => {
           console.error("Media Device Failure:", err);
-          setError(`Microphone error: ${err?.message || "Unknown media error"}. Please check your permissions.`);
+          setError(`Microphone error: ${((err as unknown) as { message?: string })?.message || "Unknown media error"}. Please check your permissions.`);
           setIsConnecting(false);
         }}
         className="flex-1"

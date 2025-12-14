@@ -6,14 +6,11 @@ import { MessageBubble } from "@/components/chat/message-bubble"
 import { ChatInput } from "@/components/chat/chat-input"
 import { refineDetails, acceptDetails, ApiError } from "@/lib/api"
 import { 
-  Mic, 
-  CheckCircle, 
-  RefreshCw, 
-  ArrowRight, 
   Sparkles,
   Zap,
   MessageSquare,
-  AlertCircle
+  CheckCircle,
+  ArrowRight
 } from "lucide-react"
 
 interface Message {
@@ -39,7 +36,6 @@ export default function ChatPage() {
   const [interviewContext, setInterviewContext] = useState<InterviewContext | null>(null)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [isAccepted, setIsAccepted] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -76,7 +72,12 @@ Please wait while the AI generates your interview plan...`
         setIsLoading(false)
       } catch (e) {
         console.error("Failed to parse context", e)
-        setError("Failed to load interview context")
+        setMessages([{
+          id: 'error-init',
+          role: 'ai',
+          content: `⚠️ **Error**: Failed to load interview context. Please try again or return to the [preparation page](/prepare).`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }])
         setIsLoading(false)
       }
     } else {
@@ -97,7 +98,13 @@ Please go back to the [preparation page](/prepare) to set up your interview.`,
 
   const handleSendMessage = async (text: string) => {
     if (!conversationId) {
-      setError("No conversation found. Please restart from the preparation page.")
+      const errorMsg: Message = {
+        id: Date.now().toString(),
+        role: 'ai',
+        content: "⚠️ **Error**: No conversation found. Please restart from the [preparation page](/prepare).",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+      setMessages(prev => [...prev, errorMsg])
       return
     }
     
@@ -110,7 +117,6 @@ Please go back to the [preparation page](/prepare) to set up your interview.`,
     }
     setMessages(prev => [...prev, userMsg])
     setIsLoading(true)
-    setError(null)
 
     try {
       const response = await refineDetails(conversationId, text)
@@ -124,7 +130,6 @@ Please go back to the [preparation page](/prepare) to set up your interview.`,
       setMessages(prev => [...prev, aiMsg])
     } catch (err) {
       const errorMessage = err instanceof ApiError ? err.message : 'Failed to refine interview plan'
-      setError(errorMessage)
       
       // Add error message to chat
       const errorMsg: Message = {
@@ -141,12 +146,10 @@ Please go back to the [preparation page](/prepare) to set up your interview.`,
 
   const handleAccept = async () => {
     if (!conversationId) {
-      setError("No conversation found. Please restart from the preparation page.")
       return
     }
-    
+
     setIsAccepted(true)
-    setError(null)
     
     // Add acceptance message
     const acceptMsg: Message = {
@@ -177,7 +180,6 @@ Perfect! Your interview session is now being prepared.
     } catch (err) {
       setIsAccepted(false)
       const errorMessage = err instanceof ApiError ? err.message : 'Failed to accept interview plan'
-      setError(errorMessage)
       
       // Add error message to chat
       const errorMsg: Message = {

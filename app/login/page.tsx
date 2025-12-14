@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Mail, Lock, ArrowRight, Loader2, AlertCircle, Sparkles, CheckCircle, LogIn } from "lucide-react"
+import { Mail, Lock, Loader2, AlertCircle, Sparkles, CheckCircle, LogIn } from "lucide-react"
 import { login, ApiError } from "@/lib/api"
 
 export default function LoginPage() {
@@ -184,7 +184,7 @@ export default function LoginPage() {
 
           <div className="mt-8 text-center">
             <p className="text-sm text-slate-500">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/signup" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
                 Sign up
               </Link>

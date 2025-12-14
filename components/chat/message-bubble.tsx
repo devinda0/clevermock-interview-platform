@@ -54,12 +54,12 @@ export function MessageBubble({ role, content, timestamp }: MessageBubbleProps) 
                     remarkPlugins={[remarkGfm]}
                     components={{
                         // Customize specific elements if needed
-                        a: ({node, ...props}) => <a {...props} className="text-blue-300 hover:text-blue-200 underline underline-offset-2" target="_blank" rel="noopener noreferrer" />,
-                        ul: ({node, ...props}) => <ul {...props} className="my-2 list-disc pl-4 space-y-1" />,
-                        ol: ({node, ...props}) => <ol {...props} className="my-2 list-decimal pl-4 space-y-1" />,
-                        li: ({node, ...props}) => <li {...props} className="pl-1" />,
-                        p: ({node, ...props}) => <p {...props} className="mb-2 last:mb-0" />,
-                        code: ({node, className, children, ...props}: any) => {
+                        a: ({...props}) => <a {...props} className="text-blue-300 hover:text-blue-200 underline underline-offset-2" target="_blank" rel="noopener noreferrer" />,
+                        ul: ({...props}) => <ul {...props} className="my-2 list-disc pl-4 space-y-1" />,
+                        ol: ({...props}) => <ol {...props} className="my-2 list-decimal pl-4 space-y-1" />,
+                        li: ({...props}) => <li {...props} className="pl-1" />,
+                        p: ({...props}) => <p {...props} className="mb-2 last:mb-0" />,
+                        code: ({className, children, ...props}: React.ComponentPropsWithoutRef<'code'>) => {
                             const match = /language-(\w+)/.exec(className || '')
                             const isInline = !match && !className?.includes('language-')
                             return isInline ? (

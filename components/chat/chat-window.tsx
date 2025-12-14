@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { MessageBubble } from "./message-bubble"
 import { ChatInput } from "./chat-input"
-import { Loader2, Mic } from "lucide-react"
+import { Mic } from "lucide-react"
 
 interface Message {
   id: string

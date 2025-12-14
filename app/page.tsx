@@ -5,14 +5,11 @@ import {
   Briefcase, 
   Mic, 
   Sparkles, 
-  CheckCircle, 
   ArrowRight, 
-  Zap, 
   Menu,
   X,
   LogIn,
-  LogOut,
-  User
+  LogOut
 } from 'lucide-react';
 import { useAuth } from "@/context/AuthContext";
 import Image from 'next/image';
