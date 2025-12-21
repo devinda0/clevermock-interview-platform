@@ -9,6 +9,7 @@ import {
   DisconnectButton,
   useRoomContext,
 } from "@livekit/components-react"
+import { RoomEvent } from "livekit-client"
 import "@livekit/components-styles"
 import { PhoneOff, Loader2, Clock, MessageSquare, Mic } from "lucide-react"
 import { getLiveKitToken } from "@/lib/api"
@@ -91,6 +92,7 @@ function VideoConference({
   onTimeUp: () => void 
 }) {
   const room = useRoomContext()
+  const [transcription, setTranscription] = useState<string>("")
 
   // Auto-disconnect when time is up
   useEffect(() => {
@@ -99,6 +101,32 @@ function VideoConference({
       room.disconnect()
     }
   }, [totalTimeRemaining, onTimeUp, room])
+
+  useEffect(() => {
+    const handleTranscription = (
+      segments: import("livekit-client").TranscriptionSegment[],
+      participant?: import("livekit-client").Participant,
+      // publication?: import("livekit-client").TrackPublication - removed unused
+    ) => {
+      // We only care about the AI agent's speech (or whoever is speaking if we want to show all)
+      // Usually checking if participant is not local is a start, or check identity
+      if (participant && !participant.isLocal) {
+        const text = segments.map(s => s.text).join(" ")
+        setTranscription(text)
+        
+        // Clear transcription after a delay if desired, or let it stay until next speech
+        // For now, let's keep it until replaced
+      }
+    }
+
+    room.on(RoomEvent.TranscriptionReceived, handleTranscription) 
+    // Note: Type casting 'as any' because RoomEvent enum might not be directly exported or recognized depending on version import
+    // Ideally: room.on(RoomEvent.TranscriptionReceived, handleTranscription) if RoomEvent is imported
+
+    return () => {
+      room.off(RoomEvent.TranscriptionReceived, handleTranscription)
+    }
+  }, [room])
 
   return (
     <div className="flex flex-col h-full">
@@ -113,7 +141,7 @@ function VideoConference({
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="relative w-full max-w-4xl aspect-video bg-black/50 rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center">
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-6 max-w-2xl px-6">
                 <div className="relative w-32 h-32 mx-auto">
                     <div className={`absolute inset-0 rounded-full animate-pulse ${phase === "interview" ? "bg-emerald-500/20" : "bg-blue-500/20"}`}></div>
                     <div className={`relative flex items-center justify-center w-full h-full bg-slate-900 rounded-full border-2 ${phase === "interview" ? "border-emerald-500/50" : "border-blue-500/50"}`}>
@@ -121,14 +149,23 @@ function VideoConference({
                     </div>
                 </div>
                 <div>
-                    <h3 className="text-xl font-semibold text-white">
+                    <h3 className="text-xl font-semibold text-white mb-2">
                       {phase === "interview" ? "Voice Interview Active" : "Feedback Session"}
                     </h3>
-                    <p className="text-slate-400">
+                    <p className="text-slate-400 mb-6">
                       {phase === "interview" 
                         ? "The AI interviewer is listening..." 
                         : "AI is providing feedback on your performance..."}
                     </p>
+                    
+                    {/* Transcription Display */}
+                    {transcription && (
+                      <div className="bg-slate-900/50 backdrop-blur-md border border-white/10 rounded-xl p-4 min-h-[80px] flex items-center justify-center transition-all animate-in fade-in slide-in-from-bottom-2">
+                        <p className="text-lg font-medium text-white/90 leading-relaxed">
+                          &quot;{transcription}&quot;
+                        </p>
+                      </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -221,6 +258,7 @@ export default function InterviewPage() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTimerActive])
 
   // Track if component is mounted to prevent redirects from unmounted components

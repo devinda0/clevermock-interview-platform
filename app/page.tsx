@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import Image from 'next/image';
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 
 /**
  * CleverMock - Virtual Mock Interview Platform
@@ -348,24 +349,7 @@ export default function App(): React.ReactElement {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-white/5 bg-[#0B0F19]">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-slate-200">
-              CleverMock
-            </span>
-          </div>
-          
-          {/* <div className="flex gap-8 text-sm text-slate-400">
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
-            <a href="#" className="hover:text-white transition-colors">Twitter</a>
-            <a href="#" className="hover:text-white transition-colors">GitHub</a>
-          </div> */}
-
-          <p className="text-slate-500 text-sm">&copy; 2025 CleverMock. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
