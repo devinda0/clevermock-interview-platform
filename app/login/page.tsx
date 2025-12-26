@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Mail, Lock, Loader2, AlertCircle, Sparkles, CheckCircle, LogIn } from "lucide-react"
 import { login, ApiError } from "@/lib/api"
 
@@ -76,9 +77,15 @@ export default function LoginPage() {
           
           <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
             Sign In to <br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-purple-400 to-pink-400">
-              CleverMock
-            </span>
+            <div className="flex justify-center mt-4 mb-2">
+              <Image 
+                src="/logo.png" 
+                alt="CleverMock Logo" 
+                width={300} 
+                height={75} 
+                className="h-20 md:h-24 w-auto object-contain"
+              />
+            </div>
           </h1>
           
           <p className="text-sm text-slate-400 leading-relaxed">

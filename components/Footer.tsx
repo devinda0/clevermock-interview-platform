@@ -5,6 +5,7 @@ import {
   Mail, 
   ArrowRight 
 } from 'lucide-react';
+import Image from 'next/image';
 
 const Footer = () => {
   return (
@@ -18,9 +19,13 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="space-y-6">
             <Link href="/" className="inline-block">
-              <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                CleverMock
-              </span>
+              <Image 
+                src="/logo.png" 
+                alt="CleverMock Logo" 
+                width={300} 
+                height={75} 
+                className="h-16 md:h-18 w-auto object-contain"
+              />
             </Link>
             <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
               Master your technical interviews with our AI-powered voice assistant. Real-time feedback, realistic scenarios, and personalized coaching.

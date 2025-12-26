@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { User, Mail, Lock, ArrowRight, Loader2, AlertCircle, Sparkles, CheckCircle } from "lucide-react"
 import { signup, ApiError } from "@/lib/api"
 
@@ -63,6 +64,18 @@ export default function SignupPage() {
         
         {/* Header */}
         <div className="text-center space-y-4">
+          <div className="flex justify-center mb-6">
+            <Link href="/">
+               <Image 
+                  src="/logo.png" 
+                  alt="CleverMock Logo" 
+                  width={300} 
+                  height={75} 
+                  className="h-16 md:h-20 w-auto object-contain hover:scale-105 transition-transform duration-300"
+               />
+             </Link>
+          </div>
+
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-semibold tracking-wide uppercase shadow-[0_0_15px_rgba(59,130,246,0.2)]">
             <Sparkles className="w-3 h-3" />
             <span>Join CleverMock</span>
