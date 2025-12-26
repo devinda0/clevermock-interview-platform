@@ -14,6 +14,10 @@ import "@livekit/components-styles"
 import { PhoneOff, Loader2, Clock, MessageSquare, Mic } from "lucide-react"
 import { getLiveKitToken } from "@/lib/api"
 
+import InterviewSummary from "@/components/InterviewSummary"
+
+// ... imports remain the same
+
 // Interview phase durations in seconds
 const INTERVIEW_DURATION = 10 * 60 // 10 minutes
 const FEEDBACK_DURATION = 5 * 60 // 5 minutes
@@ -28,6 +32,7 @@ interface TimerDisplayProps {
 }
 
 function TimerDisplay({ timeRemaining, phase, totalTimeRemaining }: TimerDisplayProps) {
+  // ... existing implementation
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -84,15 +89,18 @@ function VideoConference({
   timeRemaining, 
   phase, 
   totalTimeRemaining,
-  onTimeUp 
+  onTimeUp,
+  transcription,
+  onTranscriptionUpdate
 }: { 
   timeRemaining: number
   phase: InterviewPhase
   totalTimeRemaining: number
   onTimeUp: () => void 
+  transcription: string
+  onTranscriptionUpdate: (text: string) => void
 }) {
   const room = useRoomContext()
-  const [transcription, setTranscription] = useState<string>("")
 
   // Auto-disconnect when time is up
   useEffect(() => {
@@ -106,27 +114,20 @@ function VideoConference({
     const handleTranscription = (
       segments: import("livekit-client").TranscriptionSegment[],
       participant?: import("livekit-client").Participant,
-      // publication?: import("livekit-client").TrackPublication - removed unused
     ) => {
       // We only care about the AI agent's speech (or whoever is speaking if we want to show all)
-      // Usually checking if participant is not local is a start, or check identity
       if (participant && !participant.isLocal) {
         const text = segments.map(s => s.text).join(" ")
-        setTranscription(text)
-        
-        // Clear transcription after a delay if desired, or let it stay until next speech
-        // For now, let's keep it until replaced
+        onTranscriptionUpdate(text)
       }
     }
 
     room.on(RoomEvent.TranscriptionReceived, handleTranscription) 
-    // Note: Type casting 'as any' because RoomEvent enum might not be directly exported or recognized depending on version import
-    // Ideally: room.on(RoomEvent.TranscriptionReceived, handleTranscription) if RoomEvent is imported
-
+    
     return () => {
       room.off(RoomEvent.TranscriptionReceived, handleTranscription)
     }
-  }, [room])
+  }, [room, onTranscriptionUpdate])
 
   return (
     <div className="flex flex-col h-full">
@@ -196,6 +197,9 @@ export default function InterviewPage() {
   const [totalTimeRemaining, setTotalTimeRemaining] = useState(TOTAL_DURATION)
   const [isTimerActive, setIsTimerActive] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Transcription state
+  const [transcription, setTranscription] = useState<string>("")
 
   // Calculate current phase and phase-specific time remaining
   const phase: InterviewPhase = totalTimeRemaining > FEEDBACK_DURATION ? "interview" : "feedback"
@@ -272,11 +276,11 @@ export default function InterviewPage() {
   }, [])
 
   const [isDisconnected, setIsDisconnected] = useState(false)
-  const [timeUpMessage, setTimeUpMessage] = useState(false)
+  // const [timeUpMessage, setTimeUpMessage] = useState(false) // Removed unused state
 
   const handleTimeUp = useCallback(() => {
     console.log("Interview time is up!")
-    setTimeUpMessage(true)
+    // setTimeUpMessage(true)
   }, [])
 
   const handleDisconnect = (...args: unknown[]) => {
@@ -319,30 +323,10 @@ export default function InterviewPage() {
 
   if (isDisconnected) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-950 text-white">
-        <div className="text-center space-y-4 p-8 bg-slate-900 rounded-xl border border-slate-700">
-            {timeUpMessage ? (
-              <>
-                <div className="w-16 h-16 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center">
-                  <Clock className="w-8 h-8 text-emerald-400" />
-                </div>
-                <h3 className="text-xl font-semibold">Interview Complete!</h3>
-                <p className="text-slate-400">Your 15-minute session has ended. Great job!</p>
-              </>
-            ) : (
-              <>
-                <h3 className="text-xl font-semibold">Interview Ended</h3>
-                <p className="text-slate-400">The connection was closed.</p>
-              </>
-            )}
-            <button 
-                onClick={() => router.push("/chat")}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
-            >
-                Return to Chat
-            </button>
-        </div>
-      </div>
+      <InterviewSummary 
+        duration={TOTAL_DURATION - totalTimeRemaining} 
+        transcription={transcription}
+      />
     )
   }
 
@@ -371,6 +355,8 @@ export default function InterviewPage() {
           phase={phase}
           totalTimeRemaining={totalTimeRemaining}
           onTimeUp={handleTimeUp}
+          transcription={transcription}
+          onTranscriptionUpdate={setTranscription}
         />
         <RoomAudioRenderer />
       </LiveKitRoom>
