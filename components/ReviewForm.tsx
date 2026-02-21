@@ -89,51 +89,78 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ conversationId, onSubmit
 
   if (isSuccess || existingReview) {
     return (
-      <div className="bg-slate-900/80 border border-white/10 rounded-xl p-8 text-center backdrop-blur-lg max-w-2xl mx-auto">
-        <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-        </div>
-        <h3 className="text-xl font-bold text-white mb-2">Thank you!</h3>
-        <p className="text-slate-400 mb-8">Your feedback has been successfully submitted and helps us improve the experience.</p>
-
-        {existingReview && (
-          <div className="bg-slate-950/50 rounded-lg p-6 border border-white/5 space-y-6 text-left">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-               <span className="text-sm font-medium text-slate-300">Overall Experience</span>
-               <StarRating value={existingReview.overall_rating} size="sm" readonly />
-            </div>
-            
-            {(existingReview.ai_quality_rating ?? null) !== null && (
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                 <span className="text-sm font-medium text-slate-300">AI Quality</span>
-                 <StarRating value={existingReview.ai_quality_rating!} size="sm" readonly />
-              </div>
-            )}
-            
-             {(existingReview.difficulty_rating ?? null) !== null && (
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                 <span className="text-sm font-medium text-slate-300">Difficulty</span>
-                 <StarRating value={existingReview.difficulty_rating!} size="sm" readonly />
-              </div>
-            )}
-
-            {existingReview.feedback_text && (
-              <div className="space-y-2 border-b border-white/10 pb-4">
-                <span className="text-sm font-medium text-slate-300">Feedback</span>
-                <p className="text-slate-400 text-sm italic">&quot;{existingReview.feedback_text}&quot;</p>
-              </div>
-            )}
-
-             <div className="flex items-center justify-between">
-                 <span className="text-sm font-medium text-slate-300">Would Recommend</span>
-                 <span className="text-sm font-medium text-white bg-slate-800 px-3 py-1 rounded-full border border-white/10">
-                    {existingReview.would_recommend ? 'Yes' : 'No'}
-                 </span>
-             </div>
+      <div className="animate-in fade-in zoom-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
+        <div className="bg-slate-900/90 border border-emerald-500/20 rounded-2xl p-8 text-center backdrop-blur-xl max-w-2xl mx-auto shadow-[0_0_40px_rgba(16,185,129,0.1)]">
+          <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(16,185,129,0.2)] animate-in zoom-in duration-500 delay-300 fill-mode-both">
+            <svg className="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path>
+            </svg>
           </div>
-        )}
+          
+          <h3 className="text-3xl font-extrabold text-white mb-3 tracking-tight">Feedback Received!</h3>
+          <p className="text-slate-400 text-lg mb-8 max-w-md mx-auto">
+            Thank you! Your feedback is invaluable and helps us refine the CleverMock experience.
+          </p>
+
+          {existingReview && (
+            <div className="bg-slate-950/40 rounded-xl p-8 border border-white/5 space-y-6 text-left mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-500 fill-mode-both">
+              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                 <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Overall Experience</span>
+                 <StarRating value={existingReview.overall_rating} size="sm" readonly />
+              </div>
+              
+              {(existingReview.ai_quality_rating ?? null) !== null && (
+                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                   <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">AI Quality</span>
+                   <StarRating value={existingReview.ai_quality_rating!} size="sm" readonly />
+                </div>
+              )}
+              
+               {(existingReview.difficulty_rating ?? null) !== null && (
+                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                   <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Difficulty</span>
+                   <StarRating value={existingReview.difficulty_rating!} size="sm" readonly />
+                </div>
+              )}
+
+              {existingReview.feedback_text && (
+                <div className="space-y-3 border-b border-white/5 pb-4">
+                  <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Detailed Feedback</span>
+                  <div className="bg-slate-900/50 rounded-lg p-4 border border-white/5">
+                    <p className="text-slate-300 text-sm leading-relaxed italic">&quot;{existingReview.feedback_text}&quot;</p>
+                  </div>
+                </div>
+              )}
+
+               <div className="flex items-center justify-between">
+                   <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Recommendation</span>
+                   <div className="flex items-center gap-2">
+                     <div className={`w-2 h-2 rounded-full ${existingReview.would_recommend ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}></div>
+                     <span className="text-sm font-bold text-white">
+                        {existingReview.would_recommend ? 'Highly Recommended' : 'Not Specified'}
+                     </span>
+                   </div>
+               </div>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-2 duration-500 delay-700 fill-mode-both">
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+            >
+              Back to Dashboard
+            </button>
+            <button 
+              className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all hover:scale-105 active:scale-95 border border-white/10"
+              onClick={() => {
+                // Future functionality: share or something else
+              }}
+            >
+              Share result
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
