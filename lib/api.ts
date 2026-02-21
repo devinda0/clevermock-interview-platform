@@ -321,20 +321,14 @@ export interface ReviewResponse {
 /**
  * Submit a post-interview review
  */
-export async function submitReview(
-  conversationId: string,
-  review: ReviewCreate
-): Promise<ReviewResponse> {
-  const response = await authenticatedFetch(
-    `${API_BASE_URL}/api/v1/review/${conversationId}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(review),
-    }
-  );
+export async function submitReview(conversationId: string, review: ReviewCreate): Promise<ReviewResponse> {
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/v1/review/${conversationId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(review),
+  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({
@@ -352,12 +346,8 @@ export async function submitReview(
 /**
  * Get a review for a specific conversation
  */
-export async function getReview(
-  conversationId: string
-): Promise<ReviewResponse | null> {
-  const response = await authenticatedFetch(
-    `${API_BASE_URL}/api/v1/review/${conversationId}`
-  );
+export async function getReview(conversationId: string): Promise<ReviewResponse | null> {
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/v1/review/${conversationId}`);
 
   if (response.status === 404) {
     return null;

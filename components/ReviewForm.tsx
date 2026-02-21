@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StarRating } from './StarRating';
+import { submitReview, getReview, ReviewCreate, ReviewResponse } from '@/lib/api';
 
 interface ReviewFormProps {
   conversationId: string;
@@ -17,6 +18,32 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ conversationId, onSubmit
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [existingReview, setExistingReview] = useState<ReviewResponse | null>(null);
+
+  useEffect(() => {
+    const fetchReview = async () => {
+      try {
+        const review = await getReview(conversationId);
+        if (review) {
+          setExistingReview(review);
+          setIsSuccess(true);
+        }
+      } catch (err) {
+        console.error("Failed to fetch existing review:", err);
+        // We don't necessarily want to block rendering the form if the fetch fails,
+        // but it's good to log it.
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+    
+    if (conversationId) {
+      fetchReview();
+    } else {
+      setInitialLoading(false);
+    }
+  }, [conversationId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,31 +57,83 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ conversationId, onSubmit
     setIsSubmitting(true);
 
     try {
-      // Simulate API call to POST /api/reviews
-      // In a real implementation this would fetch from an actual endpoint:
-      // await fetch('/api/reviews', { method: 'POST', body: JSON.stringify({...}) });
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      // Simulate success
+      const payload: ReviewCreate = {
+        overall_rating: ratings.overall,
+        ...(ratings.aiQuality !== null && { ai_quality_rating: ratings.aiQuality }),
+        ...(ratings.difficulty !== null && { difficulty_rating: ratings.difficulty }),
+        ...(feedback.trim() && { feedback_text: feedback.trim() }),
+        would_recommend: wouldRecommend,
+      };
+
+      const reviewResponse = await submitReview(conversationId, payload);
+      setExistingReview(reviewResponse);
       setIsSuccess(true);
       onSubmitSuccess();
-    } catch (err) {
-      setError('Failed to submit review. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit review. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isSuccess) {
+  if (initialLoading) {
     return (
-      <div className="bg-slate-900/80 border border-white/10 rounded-xl p-8 text-center backdrop-blur-lg">
+      <div className="bg-slate-900/80 border border-white/10 rounded-xl p-8 flex justify-center items-center min-h-[200px] backdrop-blur-lg">
+        <svg className="animate-spin h-8 w-8 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+    );
+  }
+
+  if (isSuccess || existingReview) {
+    return (
+      <div className="bg-slate-900/80 border border-white/10 rounded-xl p-8 text-center backdrop-blur-lg max-w-2xl mx-auto">
         <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
           </svg>
         </div>
         <h3 className="text-xl font-bold text-white mb-2">Thank you!</h3>
-        <p className="text-slate-400">Your feedback has been successfully submitted and helps us improve the experience.</p>
+        <p className="text-slate-400 mb-8">Your feedback has been successfully submitted and helps us improve the experience.</p>
+
+        {existingReview && (
+          <div className="bg-slate-950/50 rounded-lg p-6 border border-white/5 space-y-6 text-left">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+               <span className="text-sm font-medium text-slate-300">Overall Experience</span>
+               <StarRating value={existingReview.overall_rating} size="sm" readonly />
+            </div>
+            
+            {(existingReview.ai_quality_rating ?? null) !== null && (
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                 <span className="text-sm font-medium text-slate-300">AI Quality</span>
+                 <StarRating value={existingReview.ai_quality_rating!} size="sm" readonly />
+              </div>
+            )}
+            
+             {(existingReview.difficulty_rating ?? null) !== null && (
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                 <span className="text-sm font-medium text-slate-300">Difficulty</span>
+                 <StarRating value={existingReview.difficulty_rating!} size="sm" readonly />
+              </div>
+            )}
+
+            {existingReview.feedback_text && (
+              <div className="space-y-2 border-b border-white/10 pb-4">
+                <span className="text-sm font-medium text-slate-300">Feedback</span>
+                <p className="text-slate-400 text-sm italic">&quot;{existingReview.feedback_text}&quot;</p>
+              </div>
+            )}
+
+             <div className="flex items-center justify-between">
+                 <span className="text-sm font-medium text-slate-300">Would Recommend</span>
+                 <span className="text-sm font-medium text-white bg-slate-800 px-3 py-1 rounded-full border border-white/10">
+                    {existingReview.would_recommend ? 'Yes' : 'No'}
+                 </span>
+             </div>
+          </div>
+        )}
       </div>
     );
   }

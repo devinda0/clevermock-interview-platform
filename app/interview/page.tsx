@@ -200,6 +200,9 @@ export default function InterviewPage() {
   
   // Transcription state
   const [transcription, setTranscription] = useState<string>("")
+  
+  // Conversation state
+  const [conversationId, setConversationId] = useState<string | null>(null)
 
   // Calculate current phase and phase-specific time remaining
   const phase: InterviewPhase = totalTimeRemaining > FEEDBACK_DURATION ? "interview" : "feedback"
@@ -222,6 +225,7 @@ export default function InterviewPage() {
         if (!conversationId) {
           throw new Error("No conversation ID found")
         }
+        setConversationId(conversationId)
 
         // Fetch token
         const data = await getLiveKitToken(conversationId)
@@ -326,6 +330,7 @@ export default function InterviewPage() {
       <InterviewSummary 
         duration={TOTAL_DURATION - totalTimeRemaining} 
         transcription={transcription}
+        conversationId={conversationId || ""}
       />
     )
   }
