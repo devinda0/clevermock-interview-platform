@@ -345,6 +345,12 @@ export default function InterviewPage() {
         onDisconnected={handleDisconnect}
         onError={(err) => {
           console.error("LiveKit Error:", err);
+          // Ignore "Client initiated disconnect" — this is caused by React StrictMode
+          // double-mounting in development. The room will reconnect on the second mount.
+          if (err.message?.includes("Client initiated disconnect")) {
+            console.warn("Ignoring StrictMode-triggered disconnect");
+            return;
+          }
           setError(`Connection error: ${err.message}`);
           setIsConnecting(false);
         }}
