@@ -69,8 +69,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ conversationId, onSubmit
       setExistingReview(reviewResponse);
       setIsSuccess(true);
       onSubmitSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit review. Please try again.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit review. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
