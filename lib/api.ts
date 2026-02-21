@@ -295,3 +295,83 @@ export async function getLiveKitToken(room: string): Promise<LiveKitTokenRespons
 
   return response.json();
 }
+
+// --- Review API ---
+
+export interface ReviewCreate {
+  overall_rating: number;
+  ai_quality_rating?: number;
+  difficulty_rating?: number;
+  feedback_text?: string;
+  would_recommend?: boolean;
+}
+
+export interface ReviewResponse {
+  id: string;
+  conversation_id: string;
+  user_id: string;
+  overall_rating: number;
+  ai_quality_rating?: number;
+  difficulty_rating?: number;
+  feedback_text?: string;
+  would_recommend?: boolean;
+  created_at: string;
+}
+
+/**
+ * Submit a post-interview review
+ */
+export async function submitReview(
+  conversationId: string,
+  review: ReviewCreate
+): Promise<ReviewResponse> {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/review/${conversationId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(review),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({
+      detail: "Unknown error",
+    }));
+    throw new ApiError(
+      response.status,
+      errorData.detail || "Failed to submit review"
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Get a review for a specific conversation
+ */
+export async function getReview(
+  conversationId: string
+): Promise<ReviewResponse | null> {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/api/v1/review/${conversationId}`
+  );
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({
+      detail: "Unknown error",
+    }));
+    throw new ApiError(
+      response.status,
+      errorData.detail || "Failed to get review"
+    );
+  }
+
+  return response.json();
+}
